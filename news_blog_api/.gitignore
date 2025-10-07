@@ -1,1 +1,7 @@
 news_blog_api/front-end/
+__pycache__/
+*.pyc
+db.sqlite3
+*.sqlite3
+*.log
+*.env
