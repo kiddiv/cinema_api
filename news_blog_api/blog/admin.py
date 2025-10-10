@@ -12,13 +12,11 @@ class ArticleAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'article', 'author', 'content_preview', 'created_at']
+    list_display = ['id', 'article', 'author', 'created_at']
     list_filter = ['created_at', 'article']
     search_fields = ['content']
     readonly_fields = ['created_at', 'updated_at']
 
-    def content_preview(self, obj):
-        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
 
 
 @admin.register(Like)
