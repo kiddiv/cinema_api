@@ -45,7 +45,6 @@
       const messageDiv = document.getElementById('message');
 
       messageDiv.textContent = '';
-
       try {
         const response = await fetch('http://127.0.0.1:8000/api/auth/login/', {
           method: 'POST',
@@ -61,12 +60,9 @@
           throw new Error(data.error || 'Невірні дані для входу');
         }
 
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-
-
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
         localStorage.setItem('user', JSON.stringify(data.user));
-
         messageDiv.style.color = 'green';
         messageDiv.textContent = 'Успіх,чекайте...';
 
