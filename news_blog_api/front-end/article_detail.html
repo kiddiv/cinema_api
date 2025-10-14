@@ -4,249 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Деталі статті - News Blog</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .back-button {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .back-button:hover {
-            background: #f8f9fa;
-            transform: translateX(-5px);
-        }
-
-        .article-detail {
-            background: white;
-            border-radius: 15px;
-            padding: 3rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 2rem;
-        }
-
-        .article-header {
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .article-title {
-            color: #333;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-
-        .article-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .article-author {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 1.1rem;
-        }
-
-        .article-stats {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .article-content {
-            color: #333;
-            line-height: 1.8;
-            font-size: 1.1rem;
-            margin: 2rem 0;
-            white-space: pre-wrap;
-        }
-
-        .article-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #f0f0f0;
-            flex-wrap: wrap;
-        }
-
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-
-        button:hover:not(:disabled) {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .like-button.liked {
-            background: #dc3545;
-        }
-
-        .like-button.liked:hover {
-            background: #c82333;
-        }
-
-        .delete-btn {
-            background: #dc3545;
-        }
-
-        .delete-btn:hover {
-            background: #c82333;
-        }
-
-        .comments-section {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .comments-header {
-            font-size: 1.8rem;
-            color: #333;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
-
-        .comment-form {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-        }
-
-        .comment-form textarea {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 100px;
-            margin-bottom: 1rem;
-        }
-
-        .comment-form textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .comment-item {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            border-left: 4px solid #667eea;
-        }
-
-        .comment-author {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-
-        .comment-content {
-            color: #333;
-            line-height: 1.6;
-            margin-bottom: 0.5rem;
-        }
-
-        .comment-date {
-            color: #999;
-            font-size: 0.85rem;
-        }
-
-        .loading-spinner {
-            text-align: center;
-            padding: 3rem;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error-message {
-            background: #fee;
-            border-left: 4px solid #dc3545;
-            color: #c33;
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin: 2rem 0;
-        }
-
-        .empty-comments {
-            text-align: center;
-            padding: 2rem;
-            color: #999;
-            font-style: italic;
-        }
-    </style>
+    <link href="article_detail.css">
 </head>
 <body>
     <div class="container">
@@ -379,7 +137,7 @@
                 const comments = result.data || result;
 
                 if (!comments || comments.length === 0) {
-                    commentsList.innerHTML = '<div class="empty-comments">Коментарів поки немає. Будьте першим! 💭</div>';
+                    commentsList.innerHTML = '<div class="empty-comments">Коментарів поки немає.</div>';
                     return;
                 }
 
@@ -443,7 +201,13 @@
         async function toggleLike() {
             const btn = document.getElementById('likeBtn');
             const likesCount = document.getElementById('likesCount');
+            const token = localStorage.getItem('access_token');
 
+             if (!token) {
+                    alert('Спочатку увійдіть в систему!');
+                    window.location.href = 'login.html';
+                    return;
+                }
             try {
                 btn.disabled = true;
 
@@ -452,15 +216,15 @@
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ user_id: 1 })
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
+                    console.log('Error response:', errorData);
                     throw new Error(errorData.error || 'Помилка');
                 }
-
                 const result = await response.json();
                 likesCount.textContent = result.likes_count;
 
@@ -518,9 +282,14 @@
                 return;
             }
 
+
             try {
                 const response = await fetch(`${API_BASE_URL}/articles/${articleId}/`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
                 });
 
                 if (!response.ok) {
