@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .permissions import DeleteByAdmin
 
 from .models import Article, Comment, Like
 from .serializers import (
@@ -12,19 +14,26 @@ from .serializers import (
     CommentSerializer
 )
 class ArticleListCreateView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
     def get(self, request):
         articles = Article.objects.annotate(
             likes_count=Count('likes'),
             comments_count=Count('comments')
         ).select_related('author')
-
+        author_id = request.query_params.get('author')
+        if author_id:
+            articles = articles.filter(author_id=author_id)
         serializer = ArticleListSerializer(articles, many=True)
-        return Response({'data': serializer.data})
+        return Response(serializer.data)
 
     def post(self, request):
         serializer = ArticleCreateUpdateSerializer(data=request.data)
         if serializer.is_valid():
-            article = serializer.save()
+            article = serializer.save(author=request.user)
             return Response(
                 ArticleDetailSerializer(article).data,
                 status=status.HTTP_201_CREATED
@@ -33,6 +42,7 @@ class ArticleListCreateView(APIView):
 
 
 class ArticleDetailView(APIView):
+    permission_classes = [AllowAny,DeleteByAdmin]
     def get(self, request, id):
         article = get_object_or_404(
             Article.objects.annotate(
@@ -46,6 +56,9 @@ class ArticleDetailView(APIView):
 
     def put(self, request, id):
         article = get_object_or_404(Article, id=id)
+        if article.author != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         serializer = ArticleCreateUpdateSerializer(article, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -55,16 +68,17 @@ class ArticleDetailView(APIView):
 
     def delete(self, request, id):
         article = get_object_or_404(Article, id=id)
+        self.check_object_permissions(request, article)
         article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 class ArticleCommentsView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request, id):
         article = get_object_or_404(Article, id=id)
         comments = article.comments.select_related('author').all()
         serializer = CommentSerializer(comments, many=True)
-        return Response({'data': serializer.data})
+        return Response(serializer.data)
 
     def post(self, request, id):
         article = get_object_or_404(Article, id=id)
@@ -79,66 +93,56 @@ class ArticleCommentsView(APIView):
 
 
 class CommentDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def put(self, request, id):
         comment = get_object_or_404(Comment, id=id)
+        if comment.author != request.user:
+            return Response({'error': 'Ви не можете редагувати чужий коментар'}, status=403)
+
         serializer = CommentSerializer(comment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=400)
 
     def delete(self, request, id):
         comment = get_object_or_404(Comment, id=id)
+        if comment.author != request.user:
+            return Response({'error': 'Ви не можете видалити чужий коментар'}, status=403)
         comment.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+        return Response(status=204)
 
 class ArticleLikeView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, id):
         article = get_object_or_404(Article, id=id)
-        user_id = request.data.get('user_id')
-
-        if not user_id:
+        if Like.objects.filter(article=article, user=request.user).exists():
             return Response(
-                {'error': 'user_id is required'},
+                {'error': 'Ви вже лайкнули цю статтю'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        like, created = Like.objects.get_or_create(
-            article=article,
-            user_id=user_id
-        )
-
-        if not created:
-            return Response(
-                {'error': 'Already liked'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
+        Like.objects.create(article=article, user=request.user)
         return Response({
-            'message': 'Article liked successfully',
+            'message': 'Лайк додано',
             'likes_count': article.likes.count()
         }, status=status.HTTP_201_CREATED)
 
     def delete(self, request, id):
         article = get_object_or_404(Article, id=id)
-        user_id = request.data.get('user_id')
+        like = Like.objects.filter(article=article, user=request.user).first()
 
-        if not user_id:
+        if not like:
             return Response(
-                {'error': 'user_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            like = Like.objects.get(article=article, user_id=user_id)
-            like.delete()
-            return Response({
-                'message': 'Like removed successfully',
-                'likes_count': article.likes.count()
-            })
-        except Like.DoesNotExist:
-            return Response(
-                {'error': 'Like not found'},
+                {'error': 'Ви ще не лайкали цю статтю'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+        like.delete()
+        return Response({
+            'message': 'Лайк видалено',
+            'likes_count': article.likes.count()
+        })
+
