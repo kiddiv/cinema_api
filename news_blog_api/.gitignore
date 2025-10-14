@@ -1,7 +1,12 @@
 news_blog_api/front-end/
-__pycache__/
+.idea/
+hometask.postman_collection.json
+news_blog_api/
+blog/
+backup_frontend/
 *.pyc
-db.sqlite3
+__pycache__/
 *.sqlite3
-*.log
-*.env
+venv/
+.env
+db.sqlite3
