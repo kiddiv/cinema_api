@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мої статті — News Blog</title>
+  <link rel="stylesheet" href="news_list.css">
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="logo">News Blog</a>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="newStoryBtn">Нова стаття</button>
+        <div class="user-info">
+          <div class="avatar" id="userAvatar">U</div>
+          <button class="btn btn-secondary" id="logoutBtn">Вийти</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="createForm" style="display: none;">
+      <h1>Нова стаття</h1>
+      <form id="articleForm">
+        <input type="text" id="title" placeholder="Заголовок статті" required>
+        <textarea id="content" placeholder="Напишіть свою історію..." required></textarea>
+        <div>
+          <button type="submit" class="btn btn-primary">Опублікувати</button>
+          <button type="button" class="btn btn-secondary" id="cancelBtn">Скасувати</button>
+        </div>
+      </form>
+    </div>
+    <div id="articlesList">
+      <h1>Мої статті</h1>
+      <div id="articlesContainer">
+        <p>Завантаження...</p>
+      </div>
+    </div>
+  </div>
+
+ <script>
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!localStorage.getItem('access_token') || !userData.username) {
+      alert('Спочатку увійдіть!');
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('userAvatar').textContent = userData.username[0].toUpperCase();
+
+    document.getElementById('newStoryBtn').onclick = function() {
+      document.getElementById('createForm').style.display = 'block';
+      document.getElementById('articlesList').style.display = 'none';
+      document.getElementById('title').focus();
+    };
+
+    document.getElementById('cancelBtn').onclick = function() {
+      document.getElementById('createForm').style.display = 'none';
+      document.getElementById('articlesList').style.display = 'block';
+      document.getElementById('articleForm').reset();
+    };
+
+    document.getElementById('articleForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const token = localStorage.getItem('access_token')
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/articles/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ title, content })
+        });
+
+        if (!response.ok) {
+          throw new Error('Помилка створення статті');
+        }
+
+        alert('Стаття опублікована!');
+        document.getElementById('articleForm').reset();
+        document.getElementById('createForm').style.display = 'none';
+        document.getElementById('articlesList').style.display = 'block';
+        loadArticles();
+
+      } catch (error) {
+        alert('Помилка: ' + error.message);
+      }
+    };
+
+    async function loadArticles() {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/articles/?author=${userData.id}`);
+
+        const articles = await response.json();
+        console.log('Response:', articles);
+
+        const container = document.getElementById('articlesContainer');
+
+        if (!Array.isArray(articles) || articles.length === 0) {
+          container.innerHTML = '<p>Ще немає статей</p>';
+          return;
+        }
+      container.innerHTML = '';
+        for (let article of articles) {
+          const card = document.createElement('div');
+          card.className = 'article-card';
+          card.innerHTML = `
+            <h3>${article.title}</h3>
+            <p>${article.content_preview}...</p>
+            <big>${new Date(article.created_at).toLocaleDateString('uk-UA')}</big>
+            <div>
+              <button onclick="deleteArticle(${article.id})">Видалити</button>
+            </div>
+          `;
+          container.appendChild(card);
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('articlesContainer').innerHTML = '<p>Помилка завантаження</p>';
+      }
+    }
+
+    async function deleteArticle(id) {
+      if (!confirm('Видалити цю статтю?')) return;
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/articles/${id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Помилка видалення');
+        }
+
+        alert('Статтю видалено!');
+        loadArticles();
+      } catch (error) {
+        alert('Помилка видалення');
+      }
+    }
+
+    document.getElementById('logoutBtn').onclick = async function() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      alert('Ви вийшли з системи');
+      window.location.href = 'index.html';
+    };
+
+    loadArticles();
+  </script>
+</body>
+</html>

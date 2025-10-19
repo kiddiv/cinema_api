@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Увійти — News Blog</title>
+  <link rel="stylesheet" href="css_for_loginpage.css">
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="/" class="logo">News Blog</a>
+      <div class="header-actions">
+        <a href="/" class="btn btn-secondary">Назад</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="login-container">
+    <h1>Увійти</h1>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Ім'я користувачa</label>
+        <input type="text" id="username" name="username" required placeholder="Введіть username">
+      </div>
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required placeholder="Введіть пароль">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Увійти</button>
+      <div class="form-footer">
+        <a href="registration.html" class="link">Реєстрація</a>
+      </div>
+    </form>
+
+    <div id="message" style="margin-top: 16px; font-weight: bold;"></div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const messageDiv = document.getElementById('message');
+
+      messageDiv.textContent = '';
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/auth/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Невірні дані для входу');
+        }
+
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        messageDiv.style.color = 'green';
+        messageDiv.textContent = 'Успіх,чекайте...';
+
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1000);
+
+      } catch (error) {
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
