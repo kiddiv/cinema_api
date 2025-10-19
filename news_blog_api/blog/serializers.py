@@ -39,7 +39,7 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        return Article.objects.create(validated_data)
+        return Article.objects.create(**validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):

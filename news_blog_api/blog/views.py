@@ -43,6 +43,10 @@ class ArticleListCreateView(APIView):
 
 class ArticleDetailView(APIView):
     permission_classes = [AllowAny,DeleteByAdmin]
+    def get_permissions(self):
+        if self.request.method in ['PUT' 'DELETE']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request, id):
         article = get_object_or_404(
             Article.objects.annotate(
@@ -73,7 +77,10 @@ class ArticleDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ArticleCommentsView(APIView):
-    permission_classes = [AllowAny]
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request, id):
         article = get_object_or_404(Article, id=id)
         comments = article.comments.select_related('author').all()
@@ -84,7 +91,7 @@ class ArticleCommentsView(APIView):
         article = get_object_or_404(Article, id=id)
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
-            comment = serializer.save(article=article)
+            comment = serializer.save(article=article,author=request.user)
             return Response(
                 CommentSerializer(comment).data,
                 status=status.HTTP_201_CREATED

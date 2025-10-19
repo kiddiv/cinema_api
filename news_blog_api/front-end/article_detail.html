@@ -71,10 +71,11 @@
 
         async function loadArticle() {
             const container = document.getElementById('articleContainer');
-
+            const token = localStorage.getItem('access_token');
             try {
-                const response = await fetch(`${API_BASE_URL}/articles/${articleId}/`);
-
+                const response = await fetch(`${API_BASE_URL}/articles/${articleId}/`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
                 if (!response.ok) {
                     throw new Error(`Стаття не знайдена (HTTP ${response.status})`);
                 }
@@ -158,6 +159,7 @@
         async function addComment() {
             const commentText = document.getElementById('commentText').value.trim();
             const btn = document.getElementById('addCommentBtn');
+             const token = localStorage.getItem('access_token');
 
             if (!commentText) {
                 alert(' Введіть текст коментаря');
@@ -172,10 +174,10 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
                         content: commentText,
-                        author_id: 1
                     })
                 });
 
@@ -187,7 +189,6 @@
                 document.getElementById('commentText').value = '';
                 alert(' Коментар додано!');
                 loadComments();
-                loadArticle();
 
             } catch (error) {
                 console.error('Error adding comment:', error);
