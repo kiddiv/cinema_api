@@ -33,17 +33,13 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
 
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
-    author_id = serializers.IntegerField(write_only=True)
-
     class Meta:
         model = Article
-        fields = ['id', 'title', 'content', 'author_id', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'content',  'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        author_id = validated_data.pop('author_id')
-        article = Article.objects.create(author_id=author_id, **validated_data)
-        return article
+        return Article.objects.create(**validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):
