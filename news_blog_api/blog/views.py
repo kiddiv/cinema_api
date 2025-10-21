@@ -44,7 +44,7 @@ class ArticleListCreateView(APIView):
 class ArticleDetailView(APIView):
     permission_classes = [AllowAny,DeleteByAdmin]
     def get_permissions(self):
-        if self.request.method in ['PUT' 'DELETE']:
+        if self.request.method in ['PUT','DELETE']:
             return [IsAuthenticated()]
         return [AllowAny()]
     def get(self, request, id):
